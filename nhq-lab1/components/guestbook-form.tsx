@@ -1,17 +1,26 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { mutate } from "swr";
 import { createGuestbookEntry, ActionState } from "@/app/guestbook/actions";
+import SubmitButton from "@/components/submit-button";
 
 const initialState: ActionState = {
   success: false,
 };
 
 export default function GuestbookForm() {
-  const [state, formAction, isPending] = useActionState(
+  const [state, formAction] = useActionState(
     createGuestbookEntry,
     initialState
   );
+
+  // Khi gửi thành công → yêu cầu SWR refetch danh sách
+  useEffect(() => {
+    if (state.success) {
+      mutate("/api/guestbook");
+    }
+  }, [state.success]);
 
   return (
     <form action={formAction} className="bg-gray-50 rounded-lg p-6 mb-8 space-y-4">
@@ -55,13 +64,9 @@ export default function GuestbookForm() {
           </p>
         )}
       </div>
-      <button
-        type="submit"
-        disabled={isPending}
-        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {isPending ? "Đang gửi..." : "Gửi lời nhắn"}
-      </button>
+      <SubmitButton className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        Gửi lời nhắn
+      </SubmitButton>
       {state.success && (
         <p className="text-green-600 text-sm">Gửi lời nhắn thành công!</p>
       )}

@@ -43,6 +43,25 @@ export async function createGuestbookEntry(
     };
   }
 
+  // Kiểm tra trùng lặp: cùng name + message trong vòng 1 phút
+  const ONE_MINUTE_MS = 60 * 1000;
+  const now = Date.now();
+  const isDuplicate = guestbookEntries.some(
+    (entry) =>
+      entry.name.trim().toLowerCase() === result.data.name.trim().toLowerCase() &&
+      entry.message.trim().toLowerCase() === result.data.message.trim().toLowerCase() &&
+      now - new Date(entry.createdAt).getTime() < ONE_MINUTE_MS
+  );
+
+  if (isDuplicate) {
+    return {
+      success: false,
+      errors: {
+        message: ["Lời nhắn này đã được gửi trong vòng 1 phút qua. Vui lòng thử lại sau."],
+      },
+    };
+  }
+
   // Thêm entry mới vào mảng
   const newEntry = {
     id: Date.now().toString(),
